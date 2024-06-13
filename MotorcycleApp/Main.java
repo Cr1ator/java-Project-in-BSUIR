@@ -165,7 +165,8 @@ public class Main {
             Future<List<Ammunition>> future = executorService.submit(readTask);
             List<Ammunition> ammunition = future.get();
             motorcyclist.setEquipment(ammunition);
-            System.out.println("Данные успешно прочитаны из файла.");
+            System.out.println("Данные успешно прочитаны из файла:");
+            ammunition.forEach(System.out::println);
         } catch (Exception e) {
             System.out.println("Error reading from file: " + e.getMessage());
         }
