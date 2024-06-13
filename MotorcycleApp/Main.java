@@ -1,16 +1,20 @@
 package MotorcycleApp;
 
 import MotorcycleApp.Models.*;
+import MotorcycleApp.Tasks.FileReadTask;
+import MotorcycleApp.Tasks.FileWriteTask;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.concurrent.*;
 
 public class Main {
     public static void main(String[] args) {
         Motorcyclist motorcyclist = new Motorcyclist();
-        boolean exit = false;
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
         Scanner scanner = new Scanner(System.in);
+        boolean exit = false;
 
         while (!exit) {
             System.out.println("\nМеню:");
@@ -21,7 +25,9 @@ public class Main {
             System.out.println("5. Найти аммуницию по диапазону стоимости");
             System.out.println("6. Группировать аммуницию по типу");
             System.out.println("7. Показать весь инвентарь");
-            System.out.println("8. Выйти");
+            System.out.println("8. Записать аммуницию в файл");
+            System.out.println("9. Прочитать аммуницию из файла");
+            System.out.println("10. Выйти");
             System.out.print("Сделайте выбор: ");
 
             try {
@@ -52,7 +58,14 @@ public class Main {
                         System.out.println(motorcyclist);
                         break;
                     case "8":
+                        writeAmmunitionToFile(motorcyclist, executorService);
+                        break;
+                    case "9":
+                        readAmmunitionFromFile(motorcyclist, executorService);
+                        break;
+                    case "10":
                         exit = true;
+                        executorService.shutdown();
                         break;
                     default:
                         System.out.println("Неправильный выбор. Попробуйте еще раз.");
@@ -133,5 +146,28 @@ public class Main {
             System.out.println("Тип: " + type);
             items.forEach(item -> System.out.println("  " + item));
         });
+    }
+
+    private static void writeAmmunitionToFile(Motorcyclist motorcyclist, ExecutorService executorService) {
+        try {
+            Callable<Void> writeTask = new FileWriteTask(motorcyclist.getEquipment(), "ammunition.json");
+            Future<Void> future = executorService.submit(writeTask);
+            future.get();
+            System.out.println("Данные успешно записаны в файл.");
+        } catch (Exception e) {
+            System.out.println("Error writing to file: " + e.getMessage());
+        }
+    }
+
+    private static void readAmmunitionFromFile(Motorcyclist motorcyclist, ExecutorService executorService) {
+        try {
+            Callable<List<Ammunition>> readTask = new FileReadTask("ammunition.json");
+            Future<List<Ammunition>> future = executorService.submit(readTask);
+            List<Ammunition> ammunition = future.get();
+            motorcyclist.setEquipment(ammunition);
+            System.out.println("Данные успешно прочитаны из файла.");
+        } catch (Exception e) {
+            System.out.println("Error reading from file: " + e.getMessage());
+        }
     }
 }

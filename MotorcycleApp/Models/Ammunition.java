@@ -1,8 +1,11 @@
 package MotorcycleApp.Models;
 
+import java.io.Serializable;
 import MotorcycleApp.NegativeValueException;
 
-public abstract class Ammunition {
+public abstract class Ammunition implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String name;
     private double price;
     private double weight;

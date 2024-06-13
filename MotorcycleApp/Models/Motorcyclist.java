@@ -45,6 +45,14 @@ public class Motorcyclist {
         return equipment.stream().collect(Collectors.groupingBy(Ammunition::getName));
     }
 
+    public List<Ammunition> getEquipment() {
+        return equipment;
+    }
+
+    public void setEquipment(List<Ammunition> equipment) {
+        this.equipment = equipment;
+    }
+
     @Override
     public String toString() {
         return equipment.stream().map(Ammunition::toString).collect(Collectors.joining("\n"));
