@@ -1,5 +1,7 @@
 package MotorcycleApp;
 
+import MotorcycleApp.Decorators.DiscountedAmmunition;
+import MotorcycleApp.Factories.*;
 import MotorcycleApp.Models.*;
 import MotorcycleApp.Tasks.FileReadTask;
 import MotorcycleApp.Tasks.FileWriteTask;
@@ -8,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 public class Main {
     public static void main(String[] args) {
@@ -27,7 +30,8 @@ public class Main {
             System.out.println("7. Показать весь инвентарь");
             System.out.println("8. Записать аммуницию в файл");
             System.out.println("9. Прочитать аммуницию из файла");
-            System.out.println("10. Выйти");
+            System.out.println("10. Добавить скидку на аммуницию");
+            System.out.println("11. Выйти");
             System.out.print("Сделайте выбор: ");
 
             try {
@@ -64,6 +68,9 @@ public class Main {
                         readAmmunitionFromFile(motorcyclist, executorService);
                         break;
                     case "10":
+                        addDiscountToAmmunition(motorcyclist, scanner);
+                        break;
+                    case "11":
                         exit = true;
                         executorService.shutdown();
                         break;
@@ -94,23 +101,27 @@ public class Main {
             System.out.print("Вес: ");
             double weight = Double.parseDouble(scanner.nextLine());
 
+            AmmunitionFactory factory;
             switch (type) {
                 case "1":
-                    motorcyclist.addAmmunition(new Helmet(price, weight));
+                    factory = new HelmetFactory();
                     break;
                 case "2":
-                    motorcyclist.addAmmunition(new Jacket(price, weight));
+                    factory = new JacketFactory();
                     break;
                 case "3":
-                    motorcyclist.addAmmunition(new Gloves(price, weight));
+                    factory = new GlovesFactory();
                     break;
                 case "4":
-                    motorcyclist.addAmmunition(new Boots(price, weight));
+                    factory = new BootsFactory();
                     break;
                 default:
                     System.out.println("Invalid type.");
-                    break;
+                    return;
             }
+
+            Ammunition ammunition = factory.createAmmunition(price, weight);
+            motorcyclist.addAmmunition(ammunition);
 
             System.out.println("Аммуниция успешно добавлена.");
         } catch (NumberFormatException e) {
@@ -169,6 +180,24 @@ public class Main {
             ammunition.forEach(System.out::println);
         } catch (Exception e) {
             System.out.println("Error reading from file: " + e.getMessage());
+        }
+    }
+
+    private static void addDiscountToAmmunition(Motorcyclist motorcyclist, Scanner scanner) {
+        try {
+            System.out.print("Введите процент скидки: ");
+            double discount = Double.parseDouble(scanner.nextLine());
+
+            List<Ammunition> discountedAmmunition = motorcyclist.getEquipment().stream()
+                    .map(ammunition -> new DiscountedAmmunition(ammunition, discount))
+                    .collect(Collectors.toList());
+
+            motorcyclist.setEquipment(discountedAmmunition);
+            System.out.println("Скидка успешно добавлена.");
+        } catch (NumberFormatException e) {
+            System.out.println("Error: Discount must be a numeric value.");
+        } catch (Exception ex) {
+            System.out.println("Unexpected error: " + ex.getMessage());
         }
     }
 }
